@@ -1,0 +1,10 @@
+.DS_Store
+*~
+*swp
+*swo
+
+
+triplex/build
+triplex/nbproject
+triplextract/build
+triplextract/nbproject
