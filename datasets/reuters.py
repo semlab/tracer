@@ -1,4 +1,5 @@
 import os
+import re
 import argparse
 import csv
 from bs4 import BeautifulSoup
@@ -6,7 +7,7 @@ from bs4 import BeautifulSoup
 
 def getargs():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--dataset', required=True
+    parser.add_argument('-d', '--dataset', required=True,
         help="Reuters dataset location")
     parser.add_argument('-o', '--output', required=True,
         help="csv output file")
@@ -19,39 +20,87 @@ def getargs():
 
 def text_preproc(text):
     # TODO process text
-    return text
+    # skip shares articles
+    txtsp = text.split('\n')
+    txt = '\n'.join(txtsp[:-1])
+    return txt
 
+def filtered(article, char_count=None, excluded_topic=None):
+    """
+    :param article: dictionary representing an aritcle
+    """
+    if char_count is not None and len(article['text']) < char_count:
+        return False
+    #if excluded_topic is not None and re.match(excluded_topic, article['topic']) is not None:
+    if excluded_topic is not None and re.match(excluded_topic, 'earn') is not None:
+        return False
+    return True
 
 if __name__ == "__main__":
     args = getargs()
-    filepaths = [filepath in  sorted(os.listdir(args['dataset']))
-        if filepath.endswith(".sgm")]
-    for filepath in filepaths:
-        articles = []
-        skipped_count = 0
-        try:
-            soup = BeautifulSoup(open(filepath), features='lxml')
-            reuters_tags = soup.find_all('reuters')
-            for reuters_tag in reuters_tags:
-                article = {}
-                article['date'] = reuters_tag.date.string
-                article['title'] = reuters_tag.text.title.string
-                article['text'] = reuters_tag.text.body.string
-                article['text'] = text_preproc(article['text'])
-                article['category'] = reuters_tag.topics.string
-                article['file'] = filepath
+    filenames = [filename for filename in  sorted(os.listdir(args['dataset']))
+        if filename.endswith(".sgm")]
+    skipped_count = 0
+    articles = []
+    for filename in filenames:
+        filepath = os.path.join(args['dataset'], filename)
+        print(filepath)
+        sgm_lines = []
+        with open(filepath) as sgm_file:
+            line_count = 0
+            line = None 
+            while line != "":
+                try:
+                    line_count += 1
+                    line = sgm_file.readline()
+                    sgm_lines.append(line)
+                except UnicodeDecodeError:
+                    print(f"Warning: line {line_count} of file '{filepath}' cannot be decoded... skipped")
+                    continue
+        sgm = '\n'.join(sgm_lines)
+        soup = BeautifulSoup(sgm, features='lxml')
+        reuters_tags = soup.find_all('reuters')
+        for rt_tag in reuters_tags:
+            article = {}
+            article['date'] = None if rt_tag.date is None else rt_tag.date.text
+            text_tag = rt_tag.findChild('text')
+            article['title'] = None if text_tag.title is None else text_tag.title.text
+            article['text'] = text_tag.text if text_tag.body is None else text_tag.body.text
+            article['text'] = text_preproc(article['text'])
+            article['topic'] = None if rt_tag.topics is None else rt_tag.topics.string
+            article['file'] = filepath
             articles.append(article)
-        except:
-            skipped_count += 1
-            continue
-    with open('outputpath', 'w')  as csvfile:
+        #try:
+        #    soup = BeautifulSoup(open(filepath), features='lxml')
+        #    reuters_tags = soup.find_all('reuters')
+        #    for rt_tag in reuters_tags:
+        #        article = {}
+        #        article['date'] = None if rt_tag.date is None else rt_tag.date.text
+        #        text_tag = rt_tag.findChild('text')
+        #        article['title'] = None if text_tag.title is None else text_tag.title.text
+        #        article['text'] = text_tag.text if text_tag.body is None else text_tag.body.text
+        #        article['text'] = text_preproc(article['text'])
+        #        article['topic'] = None if rt_tag.topics is None else rt_tag.topics.string
+        #        article['file'] = filepath
+        #        articles.append(article)
+        #except FileNotFoundError:
+        #    skipped_count += 1
+        #    continue
+        #except UnicodeDecodeError:
+        #    # TODO check error for file 17
+        #    print(f"Warning {filepath} cannot be decoded... skipped")
+        #    continue
+    if skipped_count > 0:
+        print(f"Warning {skipped_count} files skipped.")
+    print(f"nb of articles {len(articles)}")
+    articles = [article for article in articles if filtered(article, char_count=100, excluded_topic='earn')]
+    #print(f"nb of filtered articles {len(articles)}")
+    with open(args['output'], 'w')  as csvfile:
         article_writer = csv.writer(csvfile)
         for article in articles:
             article_writer.writerow([
                 article['text'],
                 article['title'],
                 article['date'],
-                article['category'],
+                article['topic'],
             ])
-
-
