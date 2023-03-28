@@ -19,11 +19,12 @@ def getargs():
 
 
 def text_preproc(text):
-    # TODO process text
-    # skip shares articles
-    txtsp = text.split('\n')
-    txt = '\n'.join(txtsp[:-1])
-    return txt
+    #txtsp = text.split('\n')
+    #txt = '\n'.join(txtsp[:-2])
+    #txt = '\n'.join(txtsp[:-1])
+    #txt = text[:-6]
+    #return txt
+    return text
 
 def filtered(article, char_count=None, excluded_topic=None):
     """
@@ -31,8 +32,7 @@ def filtered(article, char_count=None, excluded_topic=None):
     """
     if char_count is not None and len(article['text']) < char_count:
         return False
-    #if excluded_topic is not None and re.match(excluded_topic, article['topic']) is not None:
-    if excluded_topic is not None and re.match(excluded_topic, 'earn') is not None:
+    if excluded_topic is not None and article['topic'] is not None and re.match(excluded_topic, article['topic']) is not None:
         return False
     return True
 
@@ -71,8 +71,11 @@ if __name__ == "__main__":
             article['file'] = filepath
             articles.append(article)
     print(f"nb of articles {len(articles)}")
-    articles = [article for article in articles if filtered(article, char_count=100, excluded_topic='earn')]
-    #print(f"nb of filtered articles {len(articles)}")
+    articles = [article for article in articles if filtered(article, 
+            char_count=100, 
+            excluded_topic='earn'
+        )]
+    print(f"nb of filtered articles {len(articles)}")
     with open(args['output'], 'w')  as csvfile:
         article_writer = csv.writer(csvfile)
         for article in articles:
