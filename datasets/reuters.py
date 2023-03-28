@@ -70,28 +70,6 @@ if __name__ == "__main__":
             article['topic'] = None if rt_tag.topics is None else rt_tag.topics.string
             article['file'] = filepath
             articles.append(article)
-        #try:
-        #    soup = BeautifulSoup(open(filepath), features='lxml')
-        #    reuters_tags = soup.find_all('reuters')
-        #    for rt_tag in reuters_tags:
-        #        article = {}
-        #        article['date'] = None if rt_tag.date is None else rt_tag.date.text
-        #        text_tag = rt_tag.findChild('text')
-        #        article['title'] = None if text_tag.title is None else text_tag.title.text
-        #        article['text'] = text_tag.text if text_tag.body is None else text_tag.body.text
-        #        article['text'] = text_preproc(article['text'])
-        #        article['topic'] = None if rt_tag.topics is None else rt_tag.topics.string
-        #        article['file'] = filepath
-        #        articles.append(article)
-        #except FileNotFoundError:
-        #    skipped_count += 1
-        #    continue
-        #except UnicodeDecodeError:
-        #    # TODO check error for file 17
-        #    print(f"Warning {filepath} cannot be decoded... skipped")
-        #    continue
-    if skipped_count > 0:
-        print(f"Warning {skipped_count} files skipped.")
     print(f"nb of articles {len(articles)}")
     articles = [article for article in articles if filtered(article, char_count=100, excluded_topic='earn')]
     #print(f"nb of filtered articles {len(articles)}")
