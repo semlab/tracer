@@ -14,11 +14,11 @@ class EntityLinker:
             + "&language={1}"\
             + "&format=json"
 
-    def __init__(self):
+    def __init__(self, pretrained_model='sentence-transformers/msmarco-distilbert-base-tas-b'):
         #self.tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
         #self.model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
-        self.tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/msmarco-distilbert-base-tas-b')
-        self.model = AutoModel.from_pretrained('sentence-transformers/msmarco-distilbert-base-tas-b')
+        self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
+        self.model = AutoModel.from_pretrained(pretrained_model)
         self.cos_sim = nn.CosineSimilarity(dim=1, eps=1e-6)
     
 
@@ -38,6 +38,8 @@ class EntityLinker:
             data = response.json()
             max_sim_score = 0 
             max_score_idx = None
+            # TODO: verify the type of entity as some commodities and services
+            # are less likely to give an answer from wikidata
             if len(data['search']) == 1:# only one entity in the result
                 return data['search'][0] 
             for idx, wiki_ent in enumerate(data["search"]):
@@ -51,7 +53,7 @@ class EntityLinker:
                 # TODO consider the list of sentences in which ent_name appear
             print("max idx", max_score_idx)
             return data['search'][max_score_idx]
-        except Exception e:#TODO precise the exception
+        except:# Exception e:#TODO precise the exception
             print(data)
             return None
 
