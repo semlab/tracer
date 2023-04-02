@@ -12,11 +12,13 @@ class EntityLinker:
     wikidata_url = "https://www.wikidata.org/w/api.php?action=wbsearchentities"\
             + "&search={0}"\
             + "&language={1}"\
-            + "format=json"
+            + "&format=json"
 
     def __init__(self):
-        self.tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
-        self.model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+        #self.tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+        #self.model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+        self.tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/msmarco-distilbert-base-tas-b')
+        self.model = AutoModel.from_pretrained('sentence-transformers/msmarco-distilbert-base-tas-b')
         self.cos_sim = nn.CosineSimilarity(dim=1, eps=1e-6)
     
 
@@ -30,17 +32,27 @@ class EntityLinker:
             "name": None
         }
         try:
-            response_data = requests.get(wikidata_url.format(ent_name, "en"))
+            url = EntityLinker.wikidata_url.format(ent_name, "en")
+            print(url)
+            response = requests.get(url)
+            data = response.json()
             max_sim_score = 0 
             max_score_idx = None
-            for idx, wiki_ent in enumerate(response_data["search"]):
-                sim_score = sentence_simscore(wiki_ent['description'], 
+            if len(data['search']) == 1:# only one entity in the result
+                return data['search'][0] 
+            for idx, wiki_ent in enumerate(data["search"]):
+                sim_score = self.sentence_simscore(wiki_ent['description'], 
                         sentences[0])
+                print(f"{idx}: {wiki_ent['id']}, score={sim_score}")
                 if max_sim_score < sim_score:
+                    print(f"trading {sim_score} for {max_sim_score}")
+                    max_sim_score = sim_score
                     max_score_idx = idx
                 # TODO consider the list of sentences in which ent_name appear
-            return response_data['search'][idx]
-        except:#TODO precise the exception
+            print("max idx", max_score_idx)
+            return data['search'][max_score_idx]
+        except Exception e:#TODO precise the exception
+            print(data)
             return None
 
 
@@ -65,20 +77,14 @@ class EntityLinker:
         sentence_embeddings2 = self.mean_pooling(model_output2, encoded_input2['attention_mask'])
         sentence_embeddings1 = F.normalize(sentence_embeddings1, p=2, dim=1)
         sentence_embeddings2 = F.normalize(sentence_embeddings2, p=2, dim=1)
-        return self.cos_sim(sentence_embeddings1, sentence_embeddings2)
+        cos_sim = self.cos_sim(sentence_embeddings1, sentence_embeddings2)
+        return cos_sim.item()
 
 
 
 
 if __name__ == "__main__":
     lnk = EntityLinker()
-    score = lnk.sentence_simscore(
-        "This is a soccer ball",
-        "I like sakura flowers"
-    )
-    print(score)
-    score = lnk.sentence_simscore(
-        "This is a soccer ball",
-        "This is a basket ball"
-    )
-    print(score)
+    sentences = ["Esselte said the Antonson unit, based in LaPorte, Indiana, manufactures scales and label printers."]
+    ent = lnk.disambiguate("LaPorte", sentences)
+    print(ent)
