@@ -9,13 +9,15 @@ class EntityLinker:
     """Helper class to disambiguate entities
     using wikidata"""
 
-    wikidata_url = "https://www.wikidata.org/w/api.php?action=wbsearchentities"
-            + "&search={0}"
-            + "&language={1}"
+    wikidata_url = "https://www.wikidata.org/w/api.php?action=wbsearchentities"\
+            + "&search={0}"\
+            + "&language={1}"\
             + "format=json"
 
     def __init__(self):
-        self.cos_sim = nn.CosineSimilarity(dim=1, 1e-6)
+        self.tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+        self.model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+        self.cos_sim = nn.CosineSimilarity(dim=1, eps=1e-6)
     
 
     def disambiguate(self, ent_name, sentences):
@@ -42,26 +44,41 @@ class EntityLinker:
             return None
 
 
+    def mean_pooling(self, model_output, attention_mask):
+        token_embeddings = model_output[0] #First element of model_output contains all token embeddings
+        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+        return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+
+
     def sentence_simscore(self, sentence1, sentence2):
         """
         Compute the a similarity score between two sentences
         """
-        sentences = [sentence1, sentence2]
-        tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
-        model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+        tokenizer = self.tokenizer
+        model = self.model
         encoded_input1 = tokenizer(sentence1, padding=True, truncation=True, return_tensors='pt')
         encoded_input2 = tokenizer(sentence2, padding=True, truncation=True, return_tensors='pt')
         with torch.no_grad():
             model_output1 = model(**encoded_input1)
             model_output2 = model(**encoded_input2)
-        sentence_embeddings1 = self.mean_pooling(model_output1, encoded_input['attention_mask'])
-        sentence_embeddings2 = self.mean_pooling(model_output2, encoded_input['attention_mask'])
+        sentence_embeddings1 = self.mean_pooling(model_output1, encoded_input1['attention_mask'])
+        sentence_embeddings2 = self.mean_pooling(model_output2, encoded_input2['attention_mask'])
         sentence_embeddings1 = F.normalize(sentence_embeddings1, p=2, dim=1)
         sentence_embeddings2 = F.normalize(sentence_embeddings2, p=2, dim=1)
         return self.cos_sim(sentence_embeddings1, sentence_embeddings2)
 
 
-    def mean_pooling(model_output, attention_mask):
-        token_embedding = model_output[0] #First element of model_output contains all token embeddings
-        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embedding.size()).float()
-        return torch.sum(token_embedding * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(-1), min=1e-9)
+
+
+if __name__ == "__main__":
+    lnk = EntityLinker()
+    score = lnk.sentence_simscore(
+        "This is a soccer ball",
+        "I like sakura flowers"
+    )
+    print(score)
+    score = lnk.sentence_simscore(
+        "This is a soccer ball",
+        "This is a basket ball"
+    )
+    print(score)
