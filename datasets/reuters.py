@@ -62,16 +62,16 @@ if __name__ == "__main__":
         soup = BeautifulSoup(sgm, features='lxml')
         reuters_tags = soup.find_all('reuters')
         for rt_tag in reuters_tags:
-            if not filtered(article, char_count=100, excluded_topic='earn'):
-                continue #Skipped unfiltered article
             article = {}
             article['date'] = None if rt_tag.date is None else rt_tag.date.text
             text_tag = rt_tag.findChild('text')
             article['title'] = None if text_tag.title is None else text_tag.title.text
             article['text'] = text_tag.text if text_tag.body is None else text_tag.body.text
-            article['text'] = text_preproc(article['text'])
             article['topic'] = None if rt_tag.topics is None else rt_tag.topics.string
             article['file'] = filepath
+            if not filtered(article, char_count=100, excluded_topic='earn'):
+                continue #Skipped unfiltered article
+            article['text'] = text_preproc(article['text'])
             articles.append(article)
     #print(f"nb of articles {len(articles)}")
     #articles = [article for article in articles if filtered(article, 
