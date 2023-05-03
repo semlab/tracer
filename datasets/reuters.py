@@ -62,6 +62,8 @@ if __name__ == "__main__":
         soup = BeautifulSoup(sgm, features='lxml')
         reuters_tags = soup.find_all('reuters')
         for rt_tag in reuters_tags:
+            if not filtered(article, char_count=100, excluded_topic='earn'):
+                continue #Skipped unfiltered article
             article = {}
             article['date'] = None if rt_tag.date is None else rt_tag.date.text
             text_tag = rt_tag.findChild('text')
@@ -71,12 +73,13 @@ if __name__ == "__main__":
             article['topic'] = None if rt_tag.topics is None else rt_tag.topics.string
             article['file'] = filepath
             articles.append(article)
-    print(f"nb of articles {len(articles)}")
-    articles = [article for article in articles if filtered(article, 
-            char_count=100, 
-            excluded_topic='earn'
-        )]
-    print(f"nb of filtered articles {len(articles)}")
+    #print(f"nb of articles {len(articles)}")
+    #articles = [article for article in articles if filtered(article, 
+            #char_count=100, 
+            #excluded_topic='earn'
+        #)]
+    #print(f"nb of filtered articles {len(articles)}")
+    print(f"Article in files={len(reuters_tags)} / articles extracted={len(articles)}")
     with open(args['output'], 'w')  as csvfile:
         article_writer = csv.writer(csvfile)
         for article in articles:
