@@ -19,12 +19,13 @@ def getargs():
 
 
 def text_preproc(text):
+    txt = text.replace('\n', ' ')
     #txtsp = text.split('\n')
     #txt = '\n'.join(txtsp[:-2])
     #txt = '\n'.join(txtsp[:-1])
     #txt = text[:-6]
     #return txt
-    return text
+    return txt
 
 def filtered(article, char_count=None, excluded_topic=None):
     """
