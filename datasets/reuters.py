@@ -41,7 +41,7 @@ if __name__ == "__main__":
     args = getargs()
     filenames = [filename for filename in  sorted(os.listdir(args['dataset']))
         if filename.endswith(".sgm")]
-    skipped_count = 0
+    total_article_count = 0
     articles = []
     for filename in filenames:
         filepath = os.path.join(args['dataset'], filename)
@@ -61,11 +61,12 @@ if __name__ == "__main__":
         sgm = '\n'.join(sgm_lines)
         soup = BeautifulSoup(sgm, features='lxml')
         reuters_tags = soup.find_all('reuters')
+        total_article_count += len(reuters_tags)
         for rt_tag in reuters_tags:
             article = {}
             article['date'] = None if rt_tag.date is None else rt_tag.date.text
             text_tag = rt_tag.findChild('text')
-            article['title'] = None if text_tag.title is None else text_tag.title.text
+            article['title'] = None if text_tag.title is None else text_tag.title.text.replace('\n','')
             article['text'] = text_tag.text if text_tag.body is None else text_tag.body.text
             article['topic'] = None if rt_tag.topics is None else rt_tag.topics.string
             article['file'] = filepath
@@ -79,7 +80,7 @@ if __name__ == "__main__":
             #excluded_topic='earn'
         #)]
     #print(f"nb of filtered articles {len(articles)}")
-    print(f"Article in files={len(reuters_tags)} / articles extracted={len(articles)}")
+    print(f"Article in files={total_article_count} / articles extracted={len(articles)}")
     with open(args['output'], 'w')  as csvfile:
         article_writer = csv.writer(csvfile)
         for article in articles:
