@@ -56,6 +56,26 @@ def gen_annotation_files(csvinputpath, labels_filepath,
         writer.save()
         #df_split.to_csv("batch-"+str(batch))
 
+
+
+
+def merge_annotations(annotations_folder):
+    """
+    To merge annotated triple relationships from differents 
+    user annotated files.
+    """
+    filenames = [filename for filename in  sorted(os.listdir(anotations_folder))
+        if filename.endswith(".xlsx")]
+    frames = []
+    for filename in filenames:
+        annotations_df = pd.read_excel(filename)
+        filtered_df = annotation_df.query(annotation_df["RELATION_TYPE"] != "NONE")
+        frames.append(filtered_df)
+    return pd.concat(frames)
+
+
+
+
     
 
 if __name__ == "__main__":
