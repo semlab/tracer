@@ -8,6 +8,13 @@ import random
 
 def random_annotation(inputpath, labelspath, outputpath=None, 
         overwrite=False, labels_col="SUBCATEGORY"):
+    """
+    Generate annotation files from extracted triples.
+    :param inputpath: (csv) triples file path
+    :param labelspath: (csv) file path of the possible labels
+    :param outputpath: (csv) file path of the randomly labelled triples
+    """
+    # TODO is the overwrite thing necessary ?
     if outputpath is None and overwrite is False:
         raise ValueError("Provide an output file path or set overwrite to True.")
     elif not overwrite and outputpath is None:
@@ -25,7 +32,13 @@ def gen_annotation_files(csvinputpath, labels_filepath,
         batch_size=1000, sheet_names=['Sheet1', 'Sheet2'], 
         label_col="SUBCATEGORY",
         file_prefix="batch",
-        outfolder="../data/annotations/splits"):
+        outfolder="."):
+        #outfolder="../data/annotations/splits"):
+    """
+    Generate annotation files from extracted triples.
+    :param csvinputpath: (csv) triples file path
+    :param labels_filepath: (csv) file path of the possible labels
+    """
     labels_df = pd.read_csv(labels_filepath)
     labels = ['NONE', 'ERRONEOUS']
     trace_labels = labels_df[label_col]
@@ -59,28 +72,54 @@ def gen_annotation_files(csvinputpath, labels_filepath,
 
 
 
-def merge_annotations(annotations_folder):
+def merge_annotations(inputpath, outputpath):
     """
     To merge annotated triple relationships from differents 
-    user annotated files.
+    human annotated (excel) files.
+    :param inputpath: Path to the folder of different annotation files
+    :param outpupath: Output file of the merged annotations
     """
-    filenames = [filename for filename in  sorted(os.listdir(anotations_folder))
+    filenames = [filename for filename in  sorted(os.listdir(inputpath))
         if filename.endswith(".xlsx")]
     frames = []
     for filename in filenames:
         annotations_df = pd.read_excel(filename)
         filtered_df = annotation_df.query(annotation_df["RELATION_TYPE"] != "NONE")
         frames.append(filtered_df)
-    return pd.concat(frames)
+    merged_df = pd.concat(frames)
+    merged_df.to_csv(outputpath)
 
 
 
-
+def getargs():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('action', required=True, help='Action to run on the annotations')
+    parser.add_argument('-i', '--input', required=True, 
+            help="input tokens file (prepared by the triplex command)")
+    parser.add_argument('-o', '--output', required=True, 
+            help="file path to save the vectors")
+    parser.add_argument('-l', '--labels', required=False, 
+            help="labels used to generate annotation files")
+    args = parser.parse_args()
+    args_dict = dict()
+    args_dict['input'] = args.input
+    args_dict['output'] = args.output
+    return args_dict
     
 
 if __name__ == "__main__":
-    #gen_annotation_files("../data/entslink-triples.csv", 
-    #       "../data/labels/trace-labels.csv", batch_size=50)
-    random_annotation("../data/triples/triples-elinked.csv", 
-            "../data/labels/trace-labels.csv", 
-            outputpath="../data/triples/triples-elinked-rand-lbl.csv")
+    args = getargs()
+    action = args['action']
+    labelspath = args['labels']
+    inputpath = args['input']
+    outputpath = args['output']
+    if action == 'generate':
+        gen_annotation_files(inputpath, labelspath, outfolder=outputpath, 
+                batch_size=50)
+    elif action == 'random':
+        random_annotation(inputpath, labelspath, outputpath=outpupath)
+    elif action == 'merge':
+        merge_annotations(inputpath, outputpath):
+    else:
+        raise ValueError('sub command shoud be generate, random of merge')
+
