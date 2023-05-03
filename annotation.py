@@ -86,9 +86,10 @@ def merge_annotations(inputpath, outputpath):
     for filename in filenames:
         annotationed_df = pd.read_excel(os.path.join(inputpath,filename))
         filtered_df = annotationed_df[annotationed_df["RELATION_TYPE"] != "NONE"]
+        filtered_df = filtered_df[filtered_df["RELATION_TYPE"] != ""]
         frames.append(filtered_df)
     merged_df = pd.concat(frames)
-    merged_df.to_csv(outputpath)
+    merged_df.to_csv(outputpath, index=False)
 
 
 

@@ -3,6 +3,7 @@ import os
 import csv
 import spacy
 from gensim.models import Word2Vec
+from gensim.corpora import WikiCorpus
 
 
 
@@ -88,8 +89,19 @@ def shorten_num(num):
         return str(num)
     
 
+def train_wikipedia(inputpath, outputpath, vector_size=300, window=5):
+    space = ' '
+    wiki = WikiCorpus(inputpath)
+    model = Word2Vec(sentences=wiki.get_texts(), 
+            vector_size=vector_size, window=window, 
+            min_count=1, workers=4)
+    model.save(outputpath)
+
+
+
 def getargs():
     parser = argparse.ArgumentParser()
+    #parser.add_argument('action', help='Action to run')
     parser.add_argument('-i', '--input', required=True, 
             help="input tokens file (prepared by the triplex command)")
     parser.add_argument('-o', '--output', required=False, 
@@ -105,15 +117,20 @@ if __name__ == "__main__":
     args = getargs()
     tokenfile = args['input']
     outfilepath = args['output']
-    vector_size = 100
-    sents = TokensLoader(tokenfile)
-    model = Word2Vec(sentences=sents, vector_size=vector_size, window=5, 
-        min_count=1, workers=4)
-    vocab_len = len(model.wv)
-    default_fname = "gensim.{}.{}.bin".format(shorten_num(vocab_len), 
-             vector_size)
-    if os.path.isdir(outfilepath):
-        outfilepath = os.path.join(outfilepath, default_fname)
-    elif outfilepath is None:
-        outfilepath = default_fname
-    model.save(outfilepath)
+    if True:
+        wikidumppath = args['input']
+        outputpath = args['output'] is args['output'] is not None else 'wiki.model'
+        train_wikipedia(wikidumppath, outpupath)
+    else:
+        vector_size = 100
+        sents = TokensLoader(tokenfile)
+        model = Word2Vec(sentences=sents, vector_size=vector_size, window=5, 
+            min_count=1, workers=4)
+        vocab_len = len(model.wv)
+        default_fname = "gensim.{}.{}.bin".format(shorten_num(vocab_len), 
+                vector_size)
+        if os.path.isdir(outfilepath):
+            outfilepath = os.path.join(outfilepath, default_fname)
+        elif outfilepath is None:
+            outfilepath = default_fname
+        model.save(outfilepath)
