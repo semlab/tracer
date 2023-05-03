@@ -1,4 +1,5 @@
 import os
+import argparse
 import csv
 import xlsxwriter
 import numpy as np
@@ -83,8 +84,8 @@ def merge_annotations(inputpath, outputpath):
         if filename.endswith(".xlsx")]
     frames = []
     for filename in filenames:
-        annotations_df = pd.read_excel(filename)
-        filtered_df = annotation_df.query(annotation_df["RELATION_TYPE"] != "NONE")
+        annotationed_df = pd.read_excel(os.path.join(inputpath,filename))
+        filtered_df = annotationed_df[annotationed_df["RELATION_TYPE"] != "NONE"]
         frames.append(filtered_df)
     merged_df = pd.concat(frames)
     merged_df.to_csv(outputpath)
@@ -93,7 +94,7 @@ def merge_annotations(inputpath, outputpath):
 
 def getargs():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', required=True, help='Action to run on the annotations')
+    parser.add_argument('action', help='Action to run on the annotations')
     parser.add_argument('-i', '--input', required=True, 
             help="input tokens file (prepared by the triplex command)")
     parser.add_argument('-o', '--output', required=True, 
@@ -104,6 +105,8 @@ def getargs():
     args_dict = dict()
     args_dict['input'] = args.input
     args_dict['output'] = args.output
+    args_dict['action'] = args.action
+    args_dict['labels'] = args.labels
     return args_dict
     
 
@@ -119,7 +122,7 @@ if __name__ == "__main__":
     elif action == 'random':
         random_annotation(inputpath, labelspath, outputpath=outpupath)
     elif action == 'merge':
-        merge_annotations(inputpath, outputpath):
+        merge_annotations(inputpath, outputpath)
     else:
         raise ValueError('sub command shoud be generate, random of merge')
 
