@@ -89,10 +89,27 @@ def shorten_num(num):
         return str(num)
     
 
-def train_wikipedia(inputpath, outputpath, vector_size=300, window=5):
+def train_wikipedia(inputpath, outputpath, vector_size=300, window=5,
+            sentences_filepath=None):
     space = ' '
-    wiki = WikiCorpus(inputpath)
-    sentences = [sentence for sentence in wiki.get_texts()]
+    sentences = []
+    has_loaded = False
+    if sentences_filepath is not None and os.path.exists(sentences_filepath):
+        # loading from a file
+        with open(sentences_filepath) as sentences_file:
+            sentences = [line.split(',') for line in sentences_file]
+        has_loaded = True
+    else: 
+        # Processing the wiki corpus
+        print("Processing the wiki corpus")
+        wiki = WikiCorpus(inputpath)
+        sentences = [sentence for sentence in wiki.get_texts()]
+    if not has_loaded and sentences_filepath is not None:
+        # saving to a file
+        data = '\n'.join([','.join(sentence) for sentence in sentences])
+        with open(sentences_filepath, 'w') as sentences_file:
+            sentences_file.write(data)
+
     model = Word2Vec(sentences=sentences,
             vector_size=vector_size, window=window, 
             min_count=1, workers=4)
@@ -121,7 +138,8 @@ if __name__ == "__main__":
     if True:
         wikidumppath = args['input']
         outputpath = args['output'] if args['output'] is not None else 'wiki.model'
-        train_wikipedia(wikidumppath, outputpath)
+        train_wikipedia(wikidumppath, outputpath, 
+                sentences_filepath="./output/wikisentences.txt")
     else:
         vector_size = 100
         sents = TokensLoader(tokenfile)
