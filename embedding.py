@@ -1,7 +1,7 @@
 import argparse
 import os
 import csv
-import spacy
+#import spacy
 from gensim.models import Word2Vec
 from gensim.corpora import WikiCorpus
 
@@ -92,7 +92,8 @@ def shorten_num(num):
 def train_wikipedia(inputpath, outputpath, vector_size=300, window=5):
     space = ' '
     wiki = WikiCorpus(inputpath)
-    model = Word2Vec(sentences=wiki.get_texts(), 
+    sentences = [sentence for sentence in wiki.get_texts()]
+    model = Word2Vec(sentences=sentences,
             vector_size=vector_size, window=window, 
             min_count=1, workers=4)
     model.save(outputpath)
@@ -119,11 +120,12 @@ if __name__ == "__main__":
     outfilepath = args['output']
     if True:
         wikidumppath = args['input']
-        outputpath = args['output'] is args['output'] is not None else 'wiki.model'
-        train_wikipedia(wikidumppath, outpupath)
+        outputpath = args['output'] if args['output'] is not None else 'wiki.model'
+        train_wikipedia(wikidumppath, outputpath)
     else:
         vector_size = 100
         sents = TokensLoader(tokenfile)
+        # TODO add a logging print
         model = Word2Vec(sentences=sents, vector_size=vector_size, window=5, 
             min_count=1, workers=4)
         vocab_len = len(model.wv)
