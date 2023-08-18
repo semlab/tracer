@@ -7,6 +7,7 @@ echo "Downloading $2 from $1"
 
 wget \
      --recursive \
+     --continue \
      --no-clobber \
      --html-extension \
      --restrict-file-names=windows \
