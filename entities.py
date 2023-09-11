@@ -1,5 +1,38 @@
 import json
 
+
+class Entity:
+
+    def __init__(self):
+        self.id = None
+        self.name = None
+        self.alt_name = None
+        self.wikidata = None
+
+class Company:
+
+    def __init__(self):
+        super().__init__()
+        self.industry = None
+
+class Person:
+
+    def __init__(self):
+        super().__init__()
+
+class Place:
+
+    def __init__(self):
+        super().__init__()
+    
+
+class Relation:
+
+    def __init__(self):
+        self.source = None
+        self.destination = None
+
+
 class NodeType:
     ORG = "ORG"
     PERSON = "PERSON"
