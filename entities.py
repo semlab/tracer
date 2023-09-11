@@ -9,18 +9,18 @@ class Entity:
         self.alt_name = None
         self.wikidata = None
 
-class Company:
+class Company(Entity):
 
     def __init__(self):
         super().__init__()
         self.industry = None
 
-class Person:
+class Person(Entity):
 
     def __init__(self):
         super().__init__()
 
-class Place:
+class Place(Entity):
 
     def __init__(self):
         super().__init__()
