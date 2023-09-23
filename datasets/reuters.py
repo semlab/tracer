@@ -20,21 +20,30 @@ def getargs():
 
 def text_preproc(text):
     txt = text.replace('\n', ' ')
+    # Removing in text title
+    title_delim = ' - '
+    txtsp = txt.split(title_delim)
+    txt = title_delim.join(txtsp[1:])
+    # Removing the trailing 'Reuters
+    # helps removing one sents article as well
+    sent_delim = '.'
+    txtsp = txt.split(sent_delim)
+    txt = sent_delim.join(txtsp[:-1]) + sent_delim
     #txtsp = text.split('\n')
     #txt = '\n'.join(txtsp[:-2])
     #txt = '\n'.join(txtsp[:-1])
     #txt = text[:-6]
-    #return txt
     return txt
 
-def filtered(article, char_count=None, excluded_topic=None):
+def filtered(article, char_count=None, excluded_topics=[]):
     """
     :param article: dictionary representing an aritcle
     """
     if char_count is not None and len(article['text']) < char_count:
         return False
-    if excluded_topic is not None and article['topic'] is not None and re.match(excluded_topic, article['topic']) is not None:
-        return False
+    for excluded_topic in excluded_topics:
+        if article['topic'] is not None and re.match(excluded_topic, article['topic']) is not None:
+            return False
     return True
 
 if __name__ == "__main__":
@@ -70,10 +79,11 @@ if __name__ == "__main__":
             article['text'] = text_tag.text if text_tag.body is None else text_tag.body.text
             article['topic'] = None if rt_tag.topics is None else rt_tag.topics.string
             article['file'] = filepath
-            if not filtered(article, char_count=100, excluded_topic='earn'):
+            if not filtered(article, char_count=100, excluded_topics=['earn', 'money-supply']):
                 continue #Skipped unfiltered article
             article['text'] = text_preproc(article['text'])
-            articles.append(article)
+            if len(article['text']) > 50: # in case text is to short after preproc
+                articles.append(article)
     #print(f"nb of articles {len(articles)}")
     #articles = [article for article in articles if filtered(article, 
             #char_count=100, 
