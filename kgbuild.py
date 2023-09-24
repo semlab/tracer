@@ -259,32 +259,3 @@ if __name__ == "__main__":
             figure = args['figure'], 
             wv_path = args['vectors'], 
             verbose = args['verbose'])
-
-    """
-    triples_fpath = args['input']#"../data/triples/triples-elinked-rand-lbl.csv"
-    wv_fpath = args['vectors'] #"../data/gensim.55K.100.bin"
-    fig_fpath = args['figure']#"../data/figs/network.pdf"
-    df = pd.read_csv(triples_fpath)
-    builder = GraphBuilder(df)
-    builder.list_nodes_links()
-    G = builder.build(self_links=False)
-    compset = sorted(nx.connected_components(G), key=len, reverse=True)
-    giant = G.subgraph(compset[0])
-    giant_pos = builder.embbedings_layout( wv_fpath, giant.nodes())
-    node_colors = GraphBuilder.nodecolormap(giant.nodes())
-    plt.figure(figsize=(10,8))
-    nx.draw(G)
-    plt.savefig('../data/figs/net.pdf', dpi=100)
-    plt.clf()
-    nx.draw_networkx_nodes(giant, giant_pos, 
-        node_size=15, linewidths=0.3, 
-        node_color=node_colors, arrows=True)
-    nx.draw_networkx_edges(giant, giant_pos)
-    plt.savefig('../data/figs/net-giant.pdf', dpi=100)
-    plt.clf()
-    nx.draw(G.subgraph(compset[1]), arrows=True)
-    plt.savefig('../data/figs/comp1.pdf', dpi=100)
-    plt.clf()
-    plt.close()
-    #"""
-   
