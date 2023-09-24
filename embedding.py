@@ -1,78 +1,26 @@
 import argparse
 import os
-import csv
-#import spacy
+#import csv
 from gensim.models import Word2Vec
 from gensim.corpora import WikiCorpus
-
-
-
-class EntityRetokenizeComponent:
-    
-    def __init__(self, nlp):
-        pass
-
-    def __call__(self, doc):
-        with doc.retokenize() as retokenizer:
-            for ent in doc.ents:
-                if ent.label_ in ["PERSON", "ORG", "ORGANIZATION", 
-                              "LOCATION", "GPE"]:
-                    retokenizer.merge(doc[ent.start:ent.end], 
-                        attrs={"LEMMA": str(doc[ent.start:ent.end])})
-        return doc
-
-
-
-
-
-class TokensGenerator:
-
-    def __init__(self, inputpath):
-        self.inputpath = inputpath
-
-
-    def __iter__(self):
-        nlp = spacy.load("en_core_web_sm")
-        # TODO use nlp with nlp.get_instance()
-        retokenizer = EntityRetokenizeComponent(nlp)
-        nlp.add_pipe(retokenizer, name='merge_phrases', last=True)
-        for filename in os.listdir(self.inputpath):
-            if filename.endswith(".txt"):
-                filepath = os.path.join(self.inputpath, filename)
-                print("tokenizing {}".format(filepath))
-                with open(filepath) as f:
-                    text = f.read()
-                    doc = nlp(text)
-                    for sent in doc.sents:
-                        # TODO Remove punctuation befre tokenizing
-                        tokens = [tk.text.lower() for tk in sent 
-                                    if not tk.is_stop
-                                    #and tk.is_alpha ]
-                                    and (len(tk)>1 or tk.is_alpha)]
-                        yield tokens
 
 
 class TokensLoader:
     """
     Helper iterator to load tokenized sentences from a file
     """
-
-    def __init__(self, inputpath):
+    
+    def __init__(self, inputpath, delimiter=None):
         self.inputpath = inputpath
+        self.delimiter = delimiter
 
 
     def __iter__(self):
-        with open(self.inputpath) as csvfile:
-            csvreader = csv.reader(csvfile)
-            for row in csvreader:
-                yield row 
+        with open(self.inputpath) as tokenfile:
+            for line in tokenfile:
+                line_tokens = line.split(self.delimiter)
+                yield line_tokens
 
-
-def tokenize_to_file(inputpath, outputpath):
-    with open(outputpath, 'w') as csvfile:
-        csvwriter = csv.writer(csvfile, quotechar='"', quoting=csv.QUOTE_ALL)
-        for tokens in TokensGenerator(inputpath):
-            csvwriter.writerow(tokens)
 
            
 def shorten_num(num):
@@ -129,13 +77,16 @@ def getargs():
             help="input tokens file (prepared by the triplex command)")
     parser.add_argument('-o', '--output', required=False, 
             help="file path to save the vectors")
-    parser.add_argument('-s', '--sentences', required=False, 
-            help="file path to intermediary save the corpus sentences")
+    parser.add_argument('--vector-size', required=False, type=int,
+            help="desired  vectors size default is 100")
+    #parser.add_argument('-s', '--sentences', required=False, 
+    #        help="file path to intermediary save the corpus sentences")
     args = parser.parse_args()
     args_dict = dict()
     args_dict['input'] = args.input
     args_dict['output'] = args.output
-    args_dict['sentences'] = args.sentences
+    #args_dict['sentences'] = args.sentences
+    args_dict['vector_size'] = args.vector_size
     return args_dict
 
 
@@ -143,23 +94,25 @@ if __name__ == "__main__":
     args = getargs()
     tokenfile = args['input']
     outfilepath = args['output']
-    sentsfilepath = args['sentences']
-    if True:
-        wikidumppath = args['input']
-        outputpath = args['output'] if args['output'] is not None else 'wiki.model'
-        train_wikipedia(wikidumppath, outputpath, args['sentences'])
-                #sentences_filepath="./output/wikisentences.txt")
-    else:
-        vector_size = 100
-        sents = TokensLoader(tokenfile)
-        # TODO add a logging print
-        model = Word2Vec(sentences=sents, vector_size=vector_size, window=5, 
-            min_count=1, workers=4)
-        vocab_len = len(model.wv)
-        default_fname = "gensim.{}.{}.bin".format(shorten_num(vocab_len), 
-                vector_size)
-        if os.path.isdir(outfilepath):
-            outfilepath = os.path.join(outfilepath, default_fname)
-        elif outfilepath is None:
-            outfilepath = default_fname
-        model.save(outfilepath)
+    vector_size = args['vector_size']
+    #sentsfilepath = args['sentences']
+    #if True:
+    #    wikidumppath = args['input']
+    #    outputpath = args['output'] if args['output'] is not None else 'wiki.model'
+    #    train_wikipedia(wikidumppath, outputpath, args['sentences'])
+    #            #sentences_filepath="./output/wikisentences.txt")
+    #else:
+
+    vector_size = 100 if vector_size is None else vector_size
+    sents = TokensLoader(tokenfile)
+    # TODO add a logging print
+    model = Word2Vec(sentences=sents, vector_size=vector_size, window=5, 
+        min_count=1, workers=4)
+    vocab_len = len(model.wv)
+    default_fname = "gensim.{}.{}.bin".format(shorten_num(vocab_len), 
+            vector_size)
+    if os.path.isdir(outfilepath):
+        outfilepath = os.path.join(outfilepath, default_fname)
+    elif outfilepath is None:
+        outfilepath = default_fname
+    model.save(outfilepath)
