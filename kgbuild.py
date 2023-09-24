@@ -9,13 +9,21 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 from networkx.readwrite import json_graph
-#from gensim.models import KeyedVectors
+from gensim.models import KeyedVectors
 from sklearn.manifold import TSNE
 
 from entities import Node, Link
 
 
 class GraphBuilder:
+
+    relation_labels = {
+        0: "collaborate with",
+        1: "compete against",
+        2: "produce",
+        3: "consume",
+        4: "operates in",
+    }
 
     def __init__(self, dataframe=None, entlinks=None, 
             graph_path=None): 
@@ -79,9 +87,11 @@ class GraphBuilder:
             target = Node(label, ner_type)
             if target not in nodes:
                 nodes.append(target)
-            link = Link(source, target, rel_type=row['RELATION_TYPE']) 
+            #link = Link(source, target, rel_type=row['RELATION_TYPE']) 
+            link = Link(source, target, rel_type=row['REL_TYPE']) 
             #link = Link(source, target) 
-            label = row['RELATION']
+            #label = row['RELATION']
+            label = GraphBuilder.relation_labels[row['REL_TYPE']]
             try:
                 idx = links.index(link)
                 links[idx].labels.append(label)
@@ -122,7 +132,8 @@ class GraphBuilder:
         zero = np.zeros_like(model.wv[0])
         vectors = [model.wv[k] if k in model.wv else zero 
                 for k in model.wv.key_to_index]
-        lowd_vecs = tsne.fit_transform(vectors) 
+        X = np.array(vectors)
+        lowd_vecs = tsne.fit_transform(X) 
         nodes_pos = [lowd_vecs[model.wv.key_to_index[node]] 
                 if node in model.wv else [0,0]
                 for node in nodes]
