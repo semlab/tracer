@@ -79,6 +79,25 @@ class EntityLinker:
         pass
 
 
+    
+def getargs():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--input', required=True, 
+            help="input triples csv file")
+    parser.add_argument('-o', '--output', required=True, 
+            help="output with entity links filtered out csv")
+    parser.add_argument('--save-links', required=False,
+            help="save the identified links")
+    parser.add_argument('--save-lookup', required=False,
+            help="save the lookup table for links")
+    args = parser.parse_args()
+    args_dict = dict()
+    args_dict['input'] = args.input
+    args_dict['output'] = args.output
+    args_dict['save-links'] = args.save_links
+    args_dict['save-lookup'] = args.save_links
+    return args_dict
+
 
 if __name__ == "__main__":
     args = getargs()
