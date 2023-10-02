@@ -79,92 +79,8 @@ class EntityLinker:
         pass
 
 
-    
-
-
-# TODO delete
-def entcount(df):#, entlinks=None):
-    """
-    returns a dictionary with the count of different entities
-    """
-    entcount = {}
-    for idx, row in df.iterrows():
-        subj_ent, obj_ent = row['SUBJ_ENT'], row['OBJ_ENT']
-        '''
-        if entlinks is not None:
-            if subj_ent in entlinks:
-                subj_ent = entlinks[subjent]
-            if obj_ent in entlinks:
-                obj_ent = entlinks[obj_ent]
-        '''
-        if subj_ent in entcount:
-            entcount[subj_ent] += 1
-        else:
-            entcount[subj_ent] = 1
-        if obj_ent in entcount:
-            entcount[obj_ent] += 1
-        else:
-            entcount[obj_ent] = 1
-    return entcount
-        
-
-
-#TODO elsewhere
-def remove_contractions():
-    pass
-    
-def getargs():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input', required=True, 
-            help="input triples csv file")
-    parser.add_argument('-o', '--output', required=True, 
-            help="output with entity links filtered out csv")
-    parser.add_argument('--save-links', required=False,
-            help="save the identified links")
-    parser.add_argument('--save-lookup', required=False,
-            help="save the lookup table for links")
-    args = parser.parse_args()
-    args_dict = dict()
-    args_dict['input'] = args.input
-    args_dict['output'] = args.output
-    args_dict['save-links'] = args.save_links
-    args_dict['save-lookup'] = args.save_links
-    return args_dict
-
-
 
 if __name__ == "__main__":
-    # Entities linking
-    #triple_csvfile = "../data/triples/triples.csv"
-    #triple_outfilepath = "../data/triples/triples-elinked.csv"
-    #linkents_filepath="../data/linked-ents.json"
-    """
-    entslinkd, df = linkents(df)
-    with open(linkents_filepath, 'w') as f:
-        json.dump(entslinkd, f)
-    df.to_csv(triple_outfilepath, index=None)
-    """
-    """
-    args = getargs()
-    triple_csvfile = args['input']
-    triple_outfilepath = args['output']
-    links_outfilepath = args['save-links']
-    df = pd.read_csv(triple_csvfile)
-    """
-    """
-    linker = EntityLinker(df)
-    links = linker.find_links(keep_line=False)
-    df = linker.dataframe # necessary ? 
-    df.to_csv(triple_outfilepath, index=False)
-    #TODO do the linking
-    if links_outfilepath is not None:
-        with open(links_outfilepath, 'w') as f:
-            links_json = {k:v for k, v in links}
-            f.write(json.dumps(links_json))
-    #print(links)
-    print("Number of links {}".format(len(links)))
-    """
-
     args = getargs()
     inputpath = args['input']
     outputpath = args['output']
@@ -180,9 +96,9 @@ if __name__ == "__main__":
     if lookuppath:
         pass # create lookup and save
     
-    print(len(df))
-    print(len(linker.links_df))
-    print(len(linker.cleaned_df))
+    #print(len(df))
+    #print(len(linker.links_df))
+    #print(len(linker.cleaned_df))
 
     
     
