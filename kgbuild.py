@@ -12,17 +12,32 @@ from networkx.readwrite import json_graph
 from gensim.models import KeyedVectors
 from sklearn.manifold import TSNE
 
-from entities import Node, Link
+#from entities import Node, Link
 
 
 class GraphBuilder:
 
     relation_labels = {
-        0: "collaborate with",
-        1: "compete against",
+        0: "compete",#"compete against",
+        1: "collaborate",#"collaborate with",
         2: "produce",
         3: "consume",
         4: "operates in",
+    }
+
+    relation_colors = {
+        "compete": 'red',#"compete against",
+        "collaborate": 'green',#"collaborate with",
+        "produce": 'lightblue',
+        "consume": 'blue',
+        "operates in": 'gray',
+    }
+
+    node_colors = {
+        'ORGANIZATION': 'lightblue',
+        'PERSON': 'lightgreen',
+        'LOCATION': 'lightgray',
+        'COMMODITY': 'pink',
     }
 
     def __init__(self, dataframe=None, entlinks=None, 
@@ -38,14 +53,54 @@ class GraphBuilder:
             self.G = nx.Graph() # should be multigraph
             self.df = dataframe
             self.entlinks = entlinks
-            self.nodes = []
-            self.links = []
+            #self.nodes = []
+            #self.links = []
         else:
             raise ValueError("Provide a dataframe or a path to load the graph")
         
 
+    def add_nodes(self, dataframe=None):
+        def add_node(row):
+            #subj = str(row['SUBJ_ENT_TYPE']) + ":" + str(row['SUBJ_ENT'])
+            #obj = str(row['OBJ_ENT_TYPE']) + ":" + str(row['OBJ_ENT'])
+            #self.G.add_node(subj, name=row['SUBJ_ENT'], ent_type=row['SUBJ_ENT_TYPE']) 
+            #self.G.add_node(obj, name=row['OBJ_ENT'], ent_type=row['OBJ_ENT_TYPE']) 
+            self.G.add_node(row['SUBJ_ENT'], name=row['SUBJ_ENT'], ent_type=row['SUBJ_ENT_TYPE']) 
+            self.G.add_node(row['OBJ_ENT'], name=row['OBJ_ENT'], ent_type=row['OBJ_ENT_TYPE']) 
+        dataframe = self.df if dataframe is None else dataframe
+        dataframe.apply(add_node, axis=1)
 
-    def build(self, self_links=True):
+    
+    def add_edges(self, dataframe=None):
+        def add_edge(row):
+            self.G.add_edge(row['SUBJ_ENT'], row['OBJ_ENT'], 
+                    relation_type=row['REL_TYPE'], 
+                    relation=GraphBuilder.relation_labels[row['REL_TYPE']])
+        dataframe = self.df if dataframe is None else dataframe
+        dataframe.apply(add_edge, axis=1)
+        
+
+
+
+    def build(self, dataframe=None):
+        dataframe = self.df if dataframe is None else dataframe
+        self.add_nodes(dataframe=dataframe)
+        self.add_edges(dataframe=dataframe)
+
+
+    def save_graph_figure(self, figurepath):
+        # Visualize the graph
+        colors = [GraphBuilder.node_colors[node['ent_type']] for node in self.G.nodes.values()]
+        edge_colors = [GraphBuilder.relation_colors[self.G.edges[edge]['relation']] for edge in self.G.edges]
+        pos = nx.spring_layout(self.G)
+        nx.draw(self.G, pos, with_labels=True, node_size=500, font_size=10, node_color=colors, edge_color=edge_colors)
+        edge_labels = {(u, v): self.G[u][v]['relation'] for u, v in self.G.edges()}
+        nx.draw_networkx_edge_labels(self.G, pos, edge_labels=edge_labels, font_size=8)
+        plt.savefig(figurepath)
+
+
+    # TODO unused
+    def build_(self, self_links=True):
         """
         :param recursive_links: show self link or not
         """
@@ -67,6 +122,7 @@ class GraphBuilder:
         return self.G
 
 
+    # TODO unused
     def list_nodes_links(self):
         nodes = []
         links = []
@@ -164,6 +220,7 @@ class GraphBuilder:
         return colors
 
 
+# TODO unused
 def kgbuild(df_path=None, graph_path=None, component=None, 
         outpath=None, figure=None, wv_path=None, verbose=False):
     builder = None
@@ -252,10 +309,19 @@ def getargs():
     
 if __name__ == "__main__":
     args = getargs()
-    kgbuild(df_path = args['input'], 
-            graph_path = args['load'], 
-            component = args['component'], 
-            outpath = args['output'], 
-            figure = args['figure'], 
-            wv_path = args['vectors'], 
-            verbose = args['verbose'])
+    #kgbuild(df_path = args['input'], 
+    #        graph_path = args['load'], 
+    #        component = args['component'], 
+    #        outpath = args['output'], 
+    #        figure = args['figure'], 
+    #        wv_path = args['vectors'], 
+    #        verbose = args['verbose'])
+    articleId = 14410 #4223 #12222
+    df = pd.read_csv(args['input'])
+    flt_df = df[df['Id'] == articleId]
+    builder = GraphBuilder(dataframe=df)
+    builder.build(flt_df)
+    builder.save_graph_figure(f'output/fig-{articleId}.pdf')
+
+
+    
