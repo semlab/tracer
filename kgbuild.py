@@ -34,10 +34,10 @@ class GraphBuilder:
     }
 
     node_colors = {
-        'ORGANIZATION': 'lightblue',
+        'ORGANIZATION': 'pink',
         'PERSON': 'lightgreen',
-        'LOCATION': 'lightgray',
-        'COMMODITY': 'pink',
+        'LOCATION': 'lightblue',
+        'COMMODITY': 'yellow',
     }
 
     def __init__(self, dataframe=None, entlinks=None, 
