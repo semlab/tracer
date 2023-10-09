@@ -34,10 +34,10 @@ class GraphBuilder:
     }
 
     node_colors = {
-        'ORGANIZATION': 'lightblue',
+        'ORGANIZATION': 'pink',
         'PERSON': 'lightgreen',
-        'LOCATION': 'lightgray',
-        'COMMODITY': 'pink',
+        'LOCATION': 'lightblue',
+        'COMMODITY': 'yellow',
     }
 
     def __init__(self, dataframe=None, entlinks=None, 
@@ -316,7 +316,7 @@ if __name__ == "__main__":
     #        figure = args['figure'], 
     #        wv_path = args['vectors'], 
     #        verbose = args['verbose'])
-    articleId = 14410 #4223 #12222
+    articleId = 210 #4223 #14410 #4223 #12222
     df = pd.read_csv(args['input'])
     flt_df = df[df['Id'] == articleId]
     builder = GraphBuilder(dataframe=df)
