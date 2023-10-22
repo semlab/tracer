@@ -5,7 +5,6 @@ from htmlextract import getargs, HtmlExtractor
 
 class GBNExtractor(HtmlExtractor):
 
-
     def extract_article(self, filepath):
         article = {
             "title": None,

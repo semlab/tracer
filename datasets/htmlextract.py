@@ -23,6 +23,11 @@ def getargs():
 
 
 class HtmlExtractor:
+    """
+    preprocess site mirrored with 
+    httrack -mime:*/* +mime:text/html 
+    https://www.httrack.com/html/filters.html
+    """
 
     def __init__(self, inputpath, outputpath):
         self.filepaths = []
