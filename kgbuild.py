@@ -20,8 +20,8 @@ class GraphBuilder:
     relation_labels = {
         0: "compete",#"compete against",
         1: "collaborate",#"collaborate with",
-        2: "produce",
-        3: "consume",
+        2: "consume",
+        3: "produce",
         4: "operates in",
     }
 
@@ -316,7 +316,7 @@ if __name__ == "__main__":
     #        figure = args['figure'], 
     #        wv_path = args['vectors'], 
     #        verbose = args['verbose'])
-    articleId = 12222
+    articleId = 2799
     df = pd.read_csv(args['input'])
     flt_df = df[df['Id'] == articleId]
     builder = GraphBuilder(dataframe=df)

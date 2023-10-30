@@ -11,10 +11,13 @@ def getargs():
         help="Reuters dataset location")
     parser.add_argument('-o', '--output', required=True,
         help="csv output file")
+    parser.add_argument('-s', '--split', action='store_true',
+        help="save output in different files")
     args = parser.parse_args()
     args_dict = dict()
     args_dict['dataset'] = args.dataset
     args_dict['output'] = args.output
+    args_dict['split'] = args.split
     return args_dict
 
 
@@ -73,6 +76,7 @@ if __name__ == "__main__":
         total_article_count += len(reuters_tags)
         for rt_tag in reuters_tags:
             article = {}
+            article['id'] = rt_tag['newid']
             article['date'] = None if rt_tag.date is None else rt_tag.date.text
             text_tag = rt_tag.findChild('text')
             article['title'] = None if text_tag.title is None else text_tag.title.text.replace('\n','')
@@ -90,13 +94,24 @@ if __name__ == "__main__":
             #excluded_topic='earn'
         #)]
     #print(f"nb of filtered articles {len(articles)}")
-    print(f"Article in files={total_article_count} / articles extracted={len(articles)}")
-    with open(args['output'], 'w')  as csvfile:
-        article_writer = csv.writer(csvfile)
-        for article in articles:
-            article_writer.writerow([
-                article['text'],
-                article['title'],
-                article['date'],
-                article['topic'],
-            ])
+    if args['split']:
+        for idx, article in enumerate(articles):
+            filename = str(article['id']) if article['id'] is not None else str(idx)
+            filepath = os.path.join(args['output'], filename +'.txt')
+            with open(filepath, 'w') as txtfile:
+                txtfile.write('newid: '+ str(article['id']) + '\n')
+                txtfile.write('title: '+ str(article['title']) + '\n')
+                txtfile.write('date: '+ str(article['date']) + '\n')
+                txtfile.write('topic: '+ str(article['topic']) + '\n')
+                txtfile.write('text: \n'+ str(article['text']) + '\n')
+    else:
+        print(f"Article in files={total_article_count} / articles extracted={len(articles)}")
+        with open(args['output'], 'w')  as csvfile:
+            article_writer = csv.writer(csvfile)
+            for article in articles:
+                article_writer.writerow([
+                    article['text'],
+                    article['title'],
+                    article['date'],
+                    article['topic'],
+                ])
